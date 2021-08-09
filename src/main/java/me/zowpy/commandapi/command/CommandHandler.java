@@ -10,10 +10,11 @@ import net.dv8tion.jda.internal.utils.PermissionUtil;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 /**
  * This Project is property of Zowpy © 2021
- * Redistribution of this Project is not allowed
  *
  * @author Zowpy
  * Created: 8/8/2021
@@ -32,37 +33,30 @@ public class CommandHandler extends ListenerAdapter {
         String[] args = message.split("\\s+");
 
         if (message.startsWith(commandAPI.getPrefix())) {
-            Command command = commandAPI.getCommands().keySet().stream().filter(command1 -> command1.getName().equalsIgnoreCase(args[0].replace(commandAPI.getPrefix(), ""))).findFirst().orElse(null);
+            Executor asyncExecutor = Executors.newFixedThreadPool(1);
 
-            if (command == null) {
-                event.getChannel().sendMessage("Couldn't find that command!").queue();
-                return;
-            }
+            asyncExecutor.execute(() -> {
+                Command command = commandAPI.getCommands().keySet().stream().filter(command1 -> command1.getName().equalsIgnoreCase(args[0].replace(commandAPI.getPrefix(), ""))).findFirst().orElse(null);
 
-            CommandExecutor executor = commandAPI.getCommands().get(command);
-
-            if (command.isNeedPermission() && PermissionUtil.checkPermission(member, command.getPermission())) {
-                List<String> toReturn = new ArrayList<>();
-                if (args.length > 1) {
-                    for (int i = 1; i < args.length; i++) {
-                        toReturn.add(args[i]);
-                    }
+                if (command == null) {
+                    event.getChannel().sendMessage("Couldn't find that command!").queue();
+                    return;
                 }
 
-                executor.execute(member, event.getMessage(), event.getChannel(), args.length == 1 ? new String[]{} : toReturn.toArray(new String[]{}));
+                CommandExecutor executor = commandAPI.getCommands().get(command);
 
-            }else if (!command.isNeedPermission()) {
-                List<String> toReturn = new ArrayList<>();
-                if (args.length > 1) {
-                    for (int i = 1; i < args.length; i++) {
-                        toReturn.add(args[i]);
+                if (!command.isNeedPermission() || PermissionUtil.checkPermission(member, command.getPermission())) {
+                    List<String> toReturn = new ArrayList<>();
+                    if (args.length > 1) {
+                        for (int i = 1; i < args.length; i++) {
+                            toReturn.add(args[i]);
+                        }
                     }
+
+                    executor.execute(member, event.getMessage(), event.getChannel(), args.length == 1 ? new String[]{} : toReturn.toArray(new String[]{}));
+
                 }
-
-                executor.execute(member, event.getMessage(), event.getChannel(), args.length == 1 ? new String[]{} : toReturn.toArray(new String[]{}));
-            }
-
-
+            });
 
 
         }

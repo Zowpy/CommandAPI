@@ -9,7 +9,6 @@ import java.lang.annotation.Target;
 
 /**
  * This Project is property of Zowpy © 2021
- * Redistribution of this Project is not allowed
  *
  * @author Zowpy
  * Created: 8/8/2021
