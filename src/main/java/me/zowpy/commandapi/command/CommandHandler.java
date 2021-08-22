@@ -26,6 +26,8 @@ public class CommandHandler extends ListenerAdapter {
 
     private CommandAPI commandAPI;
 
+    private final Executor asyncExecutor = Executors.newFixedThreadPool(1);
+
     @Override
     public void onGuildMessageReceived(GuildMessageReceivedEvent event) {
         Member member = event.getMember();
@@ -33,7 +35,7 @@ public class CommandHandler extends ListenerAdapter {
         String[] args = message.split("\\s+");
 
         if (message.startsWith(commandAPI.getPrefix())) {
-            Executor asyncExecutor = Executors.newFixedThreadPool(1);
+
 
             asyncExecutor.execute(() -> {
                 Command command = commandAPI.getCommands().keySet().stream().filter(command1 -> command1.getName().equalsIgnoreCase(args[0].replace(commandAPI.getPrefix(), ""))).findFirst().orElse(null);
